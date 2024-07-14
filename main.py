@@ -1,15 +1,6 @@
 import json
 from datetime import datetime
-
-def mask_card_number(card_number):
-    return f"{card_number[:4]} {card_number[4:6]}** **** {card_number[-4:]}"
-
-def mask_account_number(account_number):
-    return f"**{account_number[-4:]}"
-
-def format_date(date_str):
-    date_obj = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%f")
-    return date_obj.strftime("%d.%m.%Y")
+from utils import mask_card_number, mask_account_number, format_date
 
 def get_last_five_operations(file_path):
     with open(file_path, 'r') as file:
@@ -20,6 +11,7 @@ def get_last_five_operations(file_path):
 
     last_five_operations = sorted_operations[:5]
 
+    result = []
     for op in last_five_operations:
         date = format_date(op['date'])
         description = op['description']
@@ -27,9 +19,17 @@ def get_last_five_operations(file_path):
         to_account = mask_account_number(op['to']) if 'to' in op else ''
         amount = f"{op['operationAmount']['amount']} {op['operationAmount']['currency']['name']}"
 
-        print(f"{date} {description}")
+        operation_info = f"{date} {description}\n"
         if from_account:
-            print(f"{from_account} -> {to_account}")
+            operation_info += f"{from_account} -> {to_account}\n"
         else:
-            print(f"{to_account}")
-        print(f"{amount}\n")
+            operation_info += f"{to_account}\n"
+        operation_info += f"{amount}\n"
+        result.append(operation_info)
+
+    return result
+
+if __name__ == "__main__":
+    operations = get_last_five_operations('operations.json')
+    for operation in operations:
+        print(operation)
